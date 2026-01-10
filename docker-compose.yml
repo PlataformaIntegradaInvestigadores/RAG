@@ -1,0 +1,53 @@
+version: "3.9"
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  centinela-rag:
+    build: .
+    container_name: centinela-rag
+    depends_on:
+      ollama:
+        condition: service_healthy
+    ports:
+      - "8181:8181"
+    environment:
+      # Rutas artefactos
+      PKL_MIN_PATH: /app/embeddings_meta_min.pkl
+      FAISS_PATH: /app/faiss_index_ip.bin
+      SCOPUS_CSV: /app/scopusdata.csv
+      SCOPUS_SEP: "|"
+      LID_MODEL_PATH: /app/lid.176.ftz
+
+      # Ollama dentro de Compose (service DNS)
+      OLLAMA_HOST: "http://ollama:11434"
+      OLLAMA_MODEL: "gemma3:4b"
+
+      # Puerto FastAPI (debe coincidir con el CMD/uvicorn o __main__)
+      PORT: "8181"
+
+      # RAG params
+      RAG_TEMPERATURE: "0.2"
+      RAG_MAX_NEW_TOKENS: "768"
+      RAG_TOP_CONTEXT: "6"
+      RAG_MAX_INPUT_CHARS: "7000"
+      RAG_MAX_CHUNK_CHARS: "900"
+      RAG_TRIM_ABSTRACT: "1"
+      API_TOPK: "100"
+      RAG_HTTP_TIMEOUT_SECS: "300"
+    restart: unless-stopped
+
+volumes:
+  ollama-data:

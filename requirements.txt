@@ -1,0 +1,13 @@
+fastapi==0.119.0
+uvicorn[standard]==0.37.0
+
+pydantic==2.12.0
+numpy==1.26.4
+pandas==2.2.2
+requests
+
+faiss-cpu==1.8.0
+sentence-transformers==3.0.1
+fasttext==0.9.3
+gradio
+openai
