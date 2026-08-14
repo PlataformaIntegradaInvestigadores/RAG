@@ -1,2 +1,6 @@
+# Environment (local only, never commit real values)
+.env
+.env.*
+
 # Agent configuration (local only, not committed)
 AGENTS.md
