@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   ollama:
     image: ollama/ollama:latest
@@ -48,6 +46,13 @@ services:
       API_TOPK: "100"
       RAG_HTTP_TIMEOUT_SECS: "300"
     restart: unless-stopped
+    networks:
+      - default
+      - centinela-net
 
 volumes:
   ollama-data:
+
+networks:
+  centinela-net:
+    external: true
