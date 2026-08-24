@@ -3,7 +3,7 @@ services:
     image: ollama/ollama:latest
     container_name: ollama
     ports:
-      - "11434:11434"
+      - "127.0.0.1:11434:11434"
     volumes:
       - ollama-data:/root/.ollama
     restart: unless-stopped
@@ -20,7 +20,7 @@ services:
       ollama:
         condition: service_healthy
     ports:
-      - "8181:8181"
+      - "127.0.0.1:8181:8181"
     environment:
       # Rutas artefactos
       PKL_MIN_PATH: /app/embeddings_meta_min.pkl
