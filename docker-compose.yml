@@ -13,9 +13,9 @@ services:
       timeout: 5s
       retries: 10
 
-  centinela-rag:
+  rag-service:
     build: .
-    container_name: centinela-rag
+    container_name: rag-service
     depends_on:
       ollama:
         condition: service_healthy
@@ -23,13 +23,13 @@ services:
       - "127.0.0.1:8181:8181"
     environment:
       # Rutas artefactos
-      PKL_MIN_PATH: /app/embeddings_meta_min.pkl
-      FAISS_PATH: /app/faiss_index_ip.bin
-      SCOPUS_CSV: /app/scopusdata.csv
+      PKL_MIN_PATH: /app/resources/embeddings_meta_min.pkl
+      FAISS_PATH: /app/resources/faiss_index_ip.bin
+      SCOPUS_CSV: /app/resources/scopusdata.csv
       SCOPUS_SEP: "|"
-      LID_MODEL_PATH: /app/lid.176.ftz
+      LID_MODEL_PATH: /app/resources/lid.176.ftz
 
-      # Ollama dentro de Compose (service DNS)
+      # Ollama dentro de Compose (service DNS, sin cambio)
       OLLAMA_HOST: "http://ollama:11434"
       OLLAMA_MODEL: "gemma3:4b"
 

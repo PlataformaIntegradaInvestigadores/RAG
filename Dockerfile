@@ -25,18 +25,15 @@ RUN pip install --upgrade pip && \
     pip install -r /app/requirements.txt
 
 # 2) Código y artefactos (RAG)
-COPY server.py /app/server.py
-COPY embeddings_meta_min.pkl /app/embeddings_meta_min.pkl
-COPY faiss_index_ip.bin /app/faiss_index_ip.bin
-COPY scopusdata.csv /app/scopusdata.csv
-COPY lid.176.ftz /app/lid.176.ftz
+COPY app/ /app/app/
+COPY resources/ /app/resources/
 
 # 3) Variables de entorno (ajusta si aplica)
-ENV PKL_MIN_PATH=/app/embeddings_meta_min.pkl \
-    FAISS_PATH=/app/faiss_index_ip.bin \
-    SCOPUS_CSV=/app/scopusdata.csv \
+ENV PKL_MIN_PATH=/app/resources/embeddings_meta_min.pkl \
+    FAISS_PATH=/app/resources/faiss_index_ip.bin \
+    SCOPUS_CSV=/app/resources/scopusdata.csv \
     SCOPUS_SEP="|" \
-    LID_MODEL_PATH=/app/lid.176.ftz \
+    LID_MODEL_PATH=/app/resources/lid.176.ftz \
     RAG_TEMPERATURE=0.2 \
     RAG_MAX_NEW_TOKENS=768 \
     RAG_TOP_CONTEXT=6 \
@@ -54,4 +51,4 @@ ENV PKL_MIN_PATH=/app/embeddings_meta_min.pkl \
 EXPOSE 8181
 
 # Uvicorn como server (más estándar que __main__ en contenedores)
-CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8181"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8181"]

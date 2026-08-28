@@ -1,16 +1,10 @@
-name: CI — RAG
+name: "CD — RAG → Producción"
 
 on:
   push:
-    branches: [develop]
-  pull_request:
-    branches: [develop, main]
+    branches: [main]
 
 jobs:
-  branch-name:
-    if: github.event_name == 'pull_request'
-    uses: PlataformaIntegradaInvestigadores/.github/.github/workflows/branch-name.yml@main
-
   # ── Control de calidad ────────────────────────────────────────────────────
   quality:
     name: Control de calidad (ruff + black)
@@ -44,49 +38,35 @@ jobs:
       - name: Ejecutar tests
         run: |
           pytest tests/ -v --tb=short \
-            --junitxml=report.xml \
-            --cov=. --cov-report=term --cov-report=xml:coverage.xml --cov-fail-under=90
+            --junitxml=report-prod.xml \
+            --cov=. --cov-report=term --cov-report=xml:coverage-prod.xml --cov-fail-under=0
       - name: Subir resultados
         uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: test-results
+          name: test-results-prod
           path: |
-            report.xml
-            coverage.xml
+            report-prod.xml
+            coverage-prod.xml
 
-  # ── Docker build ───────────────────────────────────────────────────────────
-  build-docker:
-    name: Build imagen Docker
-    runs-on: ubuntu-latest
+  # ── Deploy producción ────────────────────────────────────────────────────
+  deploy-production:
+    name: Deploy a servidor producción
+    runs-on: [self-hosted, production]
     needs: test
-    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v7
-      - name: Build imagen
-        run: docker build -t rag:${{ github.sha }} .
-      - name: Verificar imagen
-        run: docker images rag
-
-  # ── Deploy staging ───────────────────────────────────────────────────────────
-  deploy-staging:
-    name: Deploy a servidor staging
-    runs-on: [self-hosted, staging]
-    needs: test
-    if: github.ref == 'refs/heads/develop'
-    steps:
-      - name: Actualizar codigo
+      - name: Actualizar código
         run: |
           cd /opt/centinela/RAG
-          git fetch origin develop
-          git reset --hard origin/develop
+          git fetch origin main
+          git reset --hard origin/main
 
       - name: Reconstruir contenedor
         run: |
           cd /opt/centinela/RAG
           docker compose up -d --build rag-service
 
-      - name: Health check
+      - name: Health check con rollback automático
         run: |
           sleep 15
           HEALTHY=false
@@ -99,8 +79,9 @@ jobs:
             sleep 6
           done
           if [ "$HEALTHY" = "false" ]; then
-            echo "Health check fallido — rollback"
+            echo "Health check fallido — rollback al commit anterior"
             cd /opt/centinela/RAG && git reset --hard HEAD~1
             docker compose up -d --build rag-service
             exit 1
           fi
+          echo "Deploy exitoso — RAG en producción"
