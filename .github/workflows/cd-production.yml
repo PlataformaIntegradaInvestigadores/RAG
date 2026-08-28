@@ -57,13 +57,13 @@ jobs:
     steps:
       - name: Actualizar código
         run: |
-          cd /opt/centinela/RAG
+          cd /opt/centinela/rag-service
           git fetch origin main
           git reset --hard origin/main
 
       - name: Reconstruir contenedor
         run: |
-          cd /opt/centinela/RAG
+          cd /opt/centinela/rag-service
           docker compose up -d --build --remove-orphans rag-service
 
       - name: Health check con rollback automático
@@ -80,7 +80,7 @@ jobs:
           done
           if [ "$HEALTHY" = "false" ]; then
             echo "Health check fallido — rollback al commit anterior"
-            cd /opt/centinela/RAG && git reset --hard HEAD~1
+            cd /opt/centinela/rag-service && git reset --hard HEAD~1
             docker compose up -d --build --remove-orphans rag-service
             exit 1
           fi
