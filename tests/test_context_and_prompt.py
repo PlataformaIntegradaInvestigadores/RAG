@@ -70,9 +70,7 @@ class TestFormatAuthorsForMention:
         assert out == "Perez y Gomez"
 
     def test_tres_o_mas_autores_usa_et_al(self):
-        out = context._format_authors_for_mention(
-            "Perez, J.; Gomez, A.; Diaz, L."
-        )
+        out = context._format_authors_for_mention("Perez, J.; Gomez, A.; Diaz, L.")
         assert out == "Perez et al."
 
     def test_un_solo_autor_formato_apellido_coma_nombre(self):
@@ -128,9 +126,7 @@ class TestBuildContextBlocks:
         assert blocks[0]["authors_mention"] == "Perez y J."
 
     def test_recorta_abstract_largo(self):
-        blocks = context.build_context_blocks(
-            self._df(), top_k=1, max_chunk_chars=20
-        )
+        blocks = context.build_context_blocks(self._df(), top_k=1, max_chunk_chars=20)
         assert len(blocks[0]["text"]) == 20
 
     def test_top_k_mayor_que_filas_no_falla(self):

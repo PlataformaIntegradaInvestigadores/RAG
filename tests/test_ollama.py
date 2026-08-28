@@ -17,9 +17,7 @@ class TestGenerateWithOllamaHttp:
 
     def test_llamada_exitosa_devuelve_contenido(self):
         fake_response = MagicMock()
-        fake_response.json.return_value = {
-            "message": {"content": "respuesta generada"}
-        }
+        fake_response.json.return_value = {"message": {"content": "respuesta generada"}}
         with patch(
             "app.services.ollama_client.requests.post", return_value=fake_response
         ) as post:
