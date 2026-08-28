@@ -3,24 +3,33 @@ from unittest.mock import MagicMock, patch
 import pandas as pd
 from fastapi.testclient import TestClient
 
-import server
+from app.api.v1.endpoints import ask as ask_module
+from app.core.config import DEFAULT_TOPK
+from app.main import app
 
-client = TestClient(server.app)
+client = TestClient(app)
 
 
 class TestHealth:
     def test_todo_ok_devuelve_true(self):
-        with patch("server.load_pkl_and_model", return_value=(MagicMock(), MagicMock())), \
-            patch("server.load_faiss", return_value=MagicMock()), \
-            patch("server.load_scopus_csv", return_value=MagicMock()), \
-            patch("server._get_lid_model", return_value=MagicMock()):
+        with patch(
+            "app.api.v1.endpoints.health.load_pkl_and_model",
+            return_value=(MagicMock(), MagicMock()),
+        ), patch(
+            "app.api.v1.endpoints.health.load_faiss", return_value=MagicMock()
+        ), patch(
+            "app.api.v1.endpoints.health.load_scopus_csv", return_value=MagicMock()
+        ), patch(
+            "app.api.v1.endpoints.health._get_lid_model", return_value=MagicMock()
+        ):
             response = client.get("/health")
         assert response.status_code == 200
         assert response.json() == {"ok": True}
 
     def test_artefacto_faltante_devuelve_ok_false(self):
         with patch(
-            "server.load_pkl_and_model", side_effect=FileNotFoundError("no pkl")
+            "app.api.v1.endpoints.health.load_pkl_and_model",
+            side_effect=FileNotFoundError("no pkl"),
         ):
             response = client.get("/health")
         assert response.status_code == 200
@@ -49,36 +58,51 @@ class TestAsk:
         assert response.status_code == 400
 
     def test_fallo_detectando_idioma_devuelve_500(self):
-        with patch("server.detect_lang_any", side_effect=ValueError("no valido")):
+        with patch(
+            "app.api.v1.endpoints.ask.detect_lang_any",
+            side_effect=ValueError("no valido"),
+        ):
             response = client.post("/ask", json={"query": "hola"})
         assert response.status_code == 500
         assert "idioma" in response.json()["detail"].lower()
 
     def test_fallo_en_busqueda_devuelve_500(self):
-        with patch("server.detect_lang_any", return_value=("es", 0.9)), patch(
-            "server.search_full_scopus", side_effect=RuntimeError("boom")
+        with patch(
+            "app.api.v1.endpoints.ask.detect_lang_any", return_value=("es", 0.9)
+        ), patch(
+            "app.api.v1.endpoints.ask.search_full_scopus",
+            side_effect=RuntimeError("boom"),
         ):
             response = client.post("/ask", json={"query": "hola"})
         assert response.status_code == 500
         assert "búsqueda" in response.json()["detail"]
 
     def test_fallo_en_rerank_devuelve_500(self):
-        with patch("server.detect_lang_any", return_value=("es", 0.9)), patch(
-            "server.search_full_scopus", return_value=_reranked_df()
+        with patch(
+            "app.api.v1.endpoints.ask.detect_lang_any", return_value=("es", 0.9)
         ), patch(
-            "server.rerank_with_cross_encoder", side_effect=RuntimeError("boom")
+            "app.api.v1.endpoints.ask.search_full_scopus",
+            return_value=_reranked_df(),
+        ), patch(
+            "app.api.v1.endpoints.ask.rerank_with_cross_encoder",
+            side_effect=RuntimeError("boom"),
         ):
             response = client.post("/ask", json={"query": "hola"})
         assert response.status_code == 500
         assert "ranking" in response.json()["detail"]
 
     def test_fallo_construyendo_bloques_devuelve_500(self):
-        with patch("server.detect_lang_any", return_value=("es", 0.9)), patch(
-            "server.search_full_scopus", return_value=_reranked_df()
+        with patch(
+            "app.api.v1.endpoints.ask.detect_lang_any", return_value=("es", 0.9)
         ), patch(
-            "server.rerank_with_cross_encoder", return_value=_reranked_df()
+            "app.api.v1.endpoints.ask.search_full_scopus",
+            return_value=_reranked_df(),
         ), patch(
-            "server.build_context_blocks", side_effect=ValueError("vacio")
+            "app.api.v1.endpoints.ask.rerank_with_cross_encoder",
+            return_value=_reranked_df(),
+        ), patch(
+            "app.api.v1.endpoints.ask.build_context_blocks",
+            side_effect=ValueError("vacio"),
         ):
             response = client.post("/ask", json={"query": "hola"})
         assert response.status_code == 500
@@ -96,14 +120,19 @@ class TestAsk:
                 "doi_raw": "10.1/x",
             }
         ]
-        with patch("server.detect_lang_any", return_value=("es", 0.9)), patch(
-            "server.search_full_scopus", return_value=_reranked_df()
+        with patch(
+            "app.api.v1.endpoints.ask.detect_lang_any", return_value=("es", 0.9)
         ), patch(
-            "server.rerank_with_cross_encoder", return_value=_reranked_df()
+            "app.api.v1.endpoints.ask.search_full_scopus",
+            return_value=_reranked_df(),
         ), patch(
-            "server.build_context_blocks", return_value=blocks_raw
+            "app.api.v1.endpoints.ask.rerank_with_cross_encoder",
+            return_value=_reranked_df(),
         ), patch(
-            "server.generate_with_ollama_http", side_effect=RuntimeError("ollama caido")
+            "app.api.v1.endpoints.ask.build_context_blocks", return_value=blocks_raw
+        ), patch(
+            "app.api.v1.endpoints.ask.generate_with_ollama_http",
+            side_effect=RuntimeError("ollama caido"),
         ):
             response = client.post("/ask", json={"query": "hola"})
         assert response.status_code == 500
@@ -121,14 +150,18 @@ class TestAsk:
                 "doi_raw": "10.1/x",
             }
         ]
-        with patch("server.detect_lang_any", return_value=("es", 0.9)), patch(
-            "server.search_full_scopus", return_value=_reranked_df()
+        with patch(
+            "app.api.v1.endpoints.ask.detect_lang_any", return_value=("es", 0.9)
         ), patch(
-            "server.rerank_with_cross_encoder", return_value=_reranked_df()
+            "app.api.v1.endpoints.ask.search_full_scopus",
+            return_value=_reranked_df(),
         ), patch(
-            "server.build_context_blocks", return_value=blocks_raw
+            "app.api.v1.endpoints.ask.rerank_with_cross_encoder",
+            return_value=_reranked_df(),
         ), patch(
-            "server.generate_with_ollama_http",
+            "app.api.v1.endpoints.ask.build_context_blocks", return_value=blocks_raw
+        ), patch(
+            "app.api.v1.endpoints.ask.generate_with_ollama_http",
             return_value="Segun Perez [1], esto es una respuesta.",
         ):
             response = client.post("/ask", json={"query": "hola", "topk": 10})
@@ -157,16 +190,22 @@ class TestAsk:
                 "doi_raw": "10.1/x",
             }
         ]
-        with patch("server.detect_lang_any", return_value=("es", 0.9)), patch(
-            "server.search_full_scopus", return_value=_reranked_df()
+        with patch(
+            "app.api.v1.endpoints.ask.detect_lang_any", return_value=("es", 0.9)
         ), patch(
-            "server.rerank_with_cross_encoder", return_value=_reranked_df()
+            "app.api.v1.endpoints.ask.search_full_scopus",
+            return_value=_reranked_df(),
         ), patch(
-            "server.build_context_blocks", return_value=blocks_raw
+            "app.api.v1.endpoints.ask.rerank_with_cross_encoder",
+            return_value=_reranked_df(),
         ), patch(
-            "server.generate_with_ollama_http", return_value="respuesta"
+            "app.api.v1.endpoints.ask.build_context_blocks", return_value=blocks_raw
         ), patch(
-            "server.render_used_refs_report", side_effect=RuntimeError("auditoria rota")
+            "app.api.v1.endpoints.ask.generate_with_ollama_http",
+            return_value="respuesta",
+        ), patch(
+            "app.api.v1.endpoints.ask.render_used_refs_report",
+            side_effect=RuntimeError("auditoria rota"),
         ):
             response = client.post("/ask", json={"query": "hola"})
 
@@ -174,13 +213,16 @@ class TestAsk:
         assert "No se pudo auditar" in response.json()["used_refs_report"]
 
     def test_usa_topk_por_defecto_si_no_se_especifica(self):
-        blocks_raw = []
-        with patch("server.detect_lang_any", return_value=("es", 0.9)), patch(
-            "server.search_full_scopus", return_value=_reranked_df()
-        ) as search, patch(
-            "server.rerank_with_cross_encoder", return_value=_reranked_df()
+        with patch(
+            "app.api.v1.endpoints.ask.detect_lang_any", return_value=("es", 0.9)
         ), patch(
-            "server.build_context_blocks",
+            "app.api.v1.endpoints.ask.search_full_scopus",
+            return_value=_reranked_df(),
+        ) as search, patch(
+            "app.api.v1.endpoints.ask.rerank_with_cross_encoder",
+            return_value=_reranked_df(),
+        ), patch(
+            "app.api.v1.endpoints.ask.build_context_blocks",
             return_value=[
                 {
                     "cite_id": "1",
@@ -192,6 +234,9 @@ class TestAsk:
                     "doi_raw": None,
                 }
             ],
-        ), patch("server.generate_with_ollama_http", return_value="ok"):
+        ), patch(
+            "app.api.v1.endpoints.ask.generate_with_ollama_http", return_value="ok"
+        ):
             client.post("/ask", json={"query": "hola"})
-        search.assert_called_once_with("hola", topk=server.DEFAULT_TOPK)
+        search.assert_called_once_with("hola", topk=DEFAULT_TOPK)
+        assert ask_module.DEFAULT_TOPK == DEFAULT_TOPK

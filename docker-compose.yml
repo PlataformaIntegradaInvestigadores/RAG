@@ -23,11 +23,11 @@ services:
       - "127.0.0.1:8181:8181"
     environment:
       # Rutas artefactos
-      PKL_MIN_PATH: /app/embeddings_meta_min.pkl
-      FAISS_PATH: /app/faiss_index_ip.bin
-      SCOPUS_CSV: /app/scopusdata.csv
+      PKL_MIN_PATH: /app/resources/embeddings_meta_min.pkl
+      FAISS_PATH: /app/resources/faiss_index_ip.bin
+      SCOPUS_CSV: /app/resources/scopusdata.csv
       SCOPUS_SEP: "|"
-      LID_MODEL_PATH: /app/lid.176.ftz
+      LID_MODEL_PATH: /app/resources/lid.176.ftz
 
       # Ollama dentro de Compose (service DNS)
       OLLAMA_HOST: "http://ollama:11434"
