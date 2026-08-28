@@ -1,3 +1,5 @@
+name: rag
+
 services:
   ollama:
     image: ollama/ollama:latest
@@ -52,6 +54,7 @@ services:
 
 volumes:
   ollama-data:
+    name: rag_ollama-data
 
 networks:
   centinela-net:
