@@ -27,17 +27,17 @@ class TestHealth:
         ):
             response = client.get("/health")
         assert response.status_code == 200
-        assert response.json() == {"ok": True}
+        assert response.json() == {"status": "ok"}
 
-    def test_artefacto_faltante_devuelve_ok_false(self):
+    def test_artefacto_faltante_devuelve_503(self):
         with patch(
             "app.api.v1.endpoints.health.load_pkl_and_model",
             side_effect=FileNotFoundError("no pkl"),
         ):
             response = client.get("/health")
-        assert response.status_code == 200
+        assert response.status_code == 503
         body = response.json()
-        assert body["ok"] is False
+        assert body["status"] == "error"
         assert "no pkl" in body["error"]
 
 
