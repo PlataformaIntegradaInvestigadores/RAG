@@ -22,7 +22,7 @@ jobs:
           python-version: "3.11"
           cache: pip
       - name: Instalar dependencias
-        run: pip install -q -r requirements.txt pytest pytest-cov ruff black
+        run: pip install -q -r requirements.txt pytest pytest-cov httpx ruff black
       - name: ruff check
         run: ruff check .
       - name: black --check
