@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
@@ -5,6 +7,7 @@ from app.services.language import _get_lid_model
 from app.services.retrieval import load_faiss, load_pkl_and_model, load_scopus_csv
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.get("/health")
@@ -17,5 +20,6 @@ def health():
         # Modelo de idioma (obligatorio, sin fallback)
         _ = _get_lid_model()
         return {"status": "ok"}
-    except Exception as e:
-        return JSONResponse(status_code=503, content={"status": "error", "error": str(e)})
+    except Exception:
+        logger.exception("Health check failed")
+        return JSONResponse(status_code=503, content={"status": "error"})

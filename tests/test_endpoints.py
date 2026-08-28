@@ -36,9 +36,7 @@ class TestHealth:
         ):
             response = client.get("/health")
         assert response.status_code == 503
-        body = response.json()
-        assert body["status"] == "error"
-        assert "no pkl" in body["error"]
+        assert response.json() == {"status": "error"}
 
 
 def _reranked_df():
