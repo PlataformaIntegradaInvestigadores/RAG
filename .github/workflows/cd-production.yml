@@ -64,7 +64,7 @@ jobs:
       - name: Reconstruir contenedor
         run: |
           cd /opt/centinela/RAG
-          docker compose up -d --build centinela-rag
+          docker compose up -d --build rag-service
 
       - name: Health check con rollback automático
         run: |
@@ -81,7 +81,7 @@ jobs:
           if [ "$HEALTHY" = "false" ]; then
             echo "Health check fallido — rollback al commit anterior"
             cd /opt/centinela/RAG && git reset --hard HEAD~1
-            docker compose up -d --build centinela-rag
+            docker compose up -d --build rag-service
             exit 1
           fi
           echo "Deploy exitoso — RAG en producción"

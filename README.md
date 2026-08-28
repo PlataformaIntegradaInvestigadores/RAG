@@ -1,8 +1,8 @@
-# Centinela — RAG
+# Centinela — rag-service
 
 Servicio de búsqueda semántica y generación aumentada (RAG) sobre el corpus de publicaciones científicas de Centinela. Recibe una pregunta en lenguaje natural, recupera los papers más relevantes vía FAISS + reranking, y genera una respuesta citada usando un LLM local (Ollama).
 
-Parte del org multi-repo `PlataformaIntegradaInvestigadores`. Se expone a través de `api-gateway` en la ruta `/api/rag/` (upstream `centinela-rag:8181`); no se llama directo desde el frontend.
+Parte del org multi-repo `PlataformaIntegradaInvestigadores`. Se expone a través de `gateway-service` en la ruta `/api/rag/` (upstream `rag-service:8181`); no se llama directo desde el frontend.
 
 ## Stack
 

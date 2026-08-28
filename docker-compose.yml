@@ -13,9 +13,9 @@ services:
       timeout: 5s
       retries: 10
 
-  centinela-rag:
+  rag-service:
     build: .
-    container_name: centinela-rag
+    container_name: rag-service
     depends_on:
       ollama:
         condition: service_healthy
@@ -29,7 +29,7 @@ services:
       SCOPUS_SEP: "|"
       LID_MODEL_PATH: /app/resources/lid.176.ftz
 
-      # Ollama dentro de Compose (service DNS)
+      # Ollama dentro de Compose (service DNS, sin cambio)
       OLLAMA_HOST: "http://ollama:11434"
       OLLAMA_MODEL: "gemma3:4b"
 
