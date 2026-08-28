@@ -28,11 +28,6 @@ _scopus_cache = None
 
 # === Detección universal de idioma (fastText, sin fallback) ===
 LID_MODEL_PATH = os.environ.get("LID_MODEL_PATH", "lid.176.ftz")
-LID_NO_AUTO_DOWNLOAD = os.environ.get("LID_NO_AUTO_DOWNLOAD", "0") == "1"
-LID_DOWNLOAD_URL = os.environ.get(
-    "LID_DOWNLOAD_URL",
-    "https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.ftz",
-)
 
 _lid_model_cache = None
 
@@ -113,39 +108,6 @@ def e5_encode_query(model, query_text: str):
     return model.encode(
         [f"query: {query_text}"], normalize_embeddings=True, convert_to_numpy=True
     ).astype("float32")
-
-
-def search_min(query_text: str, topk: int = 5) -> pd.DataFrame:
-    """
-    Devuelve SOLO el meta mínimo del PKL (sin CSV):
-    vec_id, score, chunk_uid, doc_id, chunk_id, (scopus_id si existe), start/end
-    """
-    model, meta_min = load_pkl_and_model()
-    index = load_faiss()
-
-    q = e5_encode_query(model, query_text)
-    D, idx = index.search(q, topk)
-    vec_ids = idx[0].tolist()
-
-    hits = meta_min.set_index("vec_id").loc[vec_ids].reset_index()
-    hits.insert(1, "score", D[0])
-
-    cols_front = [
-        c
-        for c in [
-            "vec_id",
-            "score",
-            "chunk_uid",
-            "doc_id",
-            "chunk_id",
-            "scopus_id",
-            "start_token",
-            "end_token",
-        ]
-        if c in hits.columns
-    ]
-    rest = [c for c in hits.columns if c not in cols_front]
-    return hits[cols_front + rest].reset_index(drop=True)
 
 
 def search_full_scopus(query_text: str, topk: int = 5) -> pd.DataFrame:
@@ -726,7 +688,7 @@ def ask(payload: AskRequest):
     )
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     import uvicorn
 
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", "8181")))
