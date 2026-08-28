@@ -1,5 +1,5 @@
-# Imagen base
-FROM python:3.11-slim
+# --- Etapa builder: toolchain de compilación (fasttext necesita swig/cmake/gcc) ---
+FROM python:3.11-slim AS builder
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -12,6 +12,24 @@ RUN apt-get update && \
         cmake \
         swig \
         git \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY requirements.txt /app/requirements.txt
+RUN pip install --upgrade pip && \
+    pip install --prefix=/install -r /app/requirements.txt
+
+# --- Etapa final: solo runtime, sin compiladores ---
+FROM python:3.11-slim
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
         curl \
         ca-certificates \
         libgomp1 \
@@ -19,10 +37,7 @@ RUN apt-get update && \
 
 WORKDIR /app
 
-# 1) Dependencias Python
-COPY requirements.txt /app/requirements.txt
-RUN pip install --upgrade pip && \
-    pip install -r /app/requirements.txt
+COPY --from=builder /install /usr/local
 
 # 2) Código y artefactos (RAG)
 COPY app/ /app/app/
