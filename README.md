@@ -80,6 +80,10 @@ Ver `.env.example`. Variables clave:
 | `API_TOPK` | Top-K de resultados devueltos por `/ask` |
 | `PORT` | Puerto de escucha de Uvicorn |
 
+## Documentación (Swagger)
+
+Schema OpenAPI (autogenerado por FastAPI): `GET /openapi.json`. UI local propia en `/docs`. Centralizado también en el hub del `gateway-service`: `/api/docs/v1/rag`. Las rutas ya viven en la raíz, así que basta declarar `servers: [{"url": "/api/rag"}]` en el constructor de `FastAPI(...)` — no hace falta recortar prefijo. `/health` queda fuera del schema (`include_in_schema=False`).
+
 ## Tests
 
 ```bash
