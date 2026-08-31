@@ -10,7 +10,7 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-@router.get("/health")
+@router.get("/health", include_in_schema=False)
 def health():
     try:
         # Artefactos de RAG

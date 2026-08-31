@@ -39,6 +39,15 @@ class TestHealth:
         assert response.json() == {"status": "error"}
 
 
+class TestOpenAPI:
+    def test_schema_uses_gateway_prefix(self):
+        response = client.get("/openapi.json")
+        assert response.status_code == 200
+        schema = response.json()
+        assert schema["servers"] == [{"url": "/api/rag", "description": "Gateway"}]
+        assert "/health" not in schema["paths"]
+
+
 def _reranked_df():
     return pd.DataFrame(
         {

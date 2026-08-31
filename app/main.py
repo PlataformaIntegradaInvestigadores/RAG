@@ -5,7 +5,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.endpoints import ask, health
 
-app = FastAPI(title="Centinela RAG API", version="1.0.0")
+app = FastAPI(
+    title="Centinela RAG API",
+    version="1.0.0",
+    servers=[{"url": "/api/rag", "description": "Gateway"}],
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # en producción: restringe a tu dominio
